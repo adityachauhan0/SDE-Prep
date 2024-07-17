@@ -354,41 +354,33 @@ This case is the exact same as example 2, but with nodes 5 and 6 swapped.
 Note that the solution remains the same since 5 and 6 are in the same location and should be ordered by their values.
 ```cpp
 class Solution {
+private:
+    map<int, map<int, multiset<int>>> columnMap;
+    
+    void dfs(TreeNode* root, int row, int col) {
+        if (!root) return;
+        
+        columnMap[col][row].insert(root->val);
+        
+        dfs(root->left, row + 1, col - 1);
+        dfs(root->right, row + 1, col + 1);
+    }
+    
 public:
-    vector<vector<int>> verticalTraversal(TreeNode* root) {
-        // Queue to store the node and its vertical distance and level
-        queue<pair<TreeNode*, pair<int, int>>> toVisit;
-        toVisit.push({root, {0, 0}});
-        // Map to store the nodes based on vertical distance and level
-        map<int, map<int, vector<int>>> nodes;
-        while (!toVisit.empty()) {
-            auto cur = toVisit.front();
-            toVisit.pop();
-            TreeNode* node = cur.first;
-            int vertical = cur.second.first;
-            int level = cur.second.second;
-            // Add the node's value to the appropriate position in the map
-            nodes[vertical][level].push_back(node->val);
-            // Traverse the left and right children with updated vertical and level values
-            if (node->left) {
-                toVisit.push({node->left, {vertical - 1, level + 1}});
-            }
-            if (node->right) {
-                toVisit.push({node->right, {vertical + 1, level + 1}});
-            }
-        }
-        // Collect the results in the correct order
-        vector<vector<int>> ans;
-        for (auto& p : nodes) {
-            vector<int> col;
-            for (auto& q : p.second) {
-                sort(q.second.begin(), q.second.end());
-                col.insert(col.end(), q.second.begin(), q.second.end());
-            }
-            ans.push_back(col);
-        }
-        return ans;
-    }
+    vector<vector<int>> verticalTraversal(TreeNode* root) {
+        dfs(root, 0, 0);
+        
+        vector<vector<int>> result;
+        for (const auto& column : columnMap) {
+            vector<int> columnValues;
+            for (const auto& rowMap : column.second) {
+                columnValues.insert(columnValues.end(), rowMap.second.begin(), rowMap.second.end());
+            }
+            result.push_back(columnValues);
+        }
+        
+        return result;
+    }
 };
 ```
 
