@@ -739,37 +739,26 @@ It is **guaranteed** that the answer will in the range of a **32-bit** signed in
 **Input:** root = [1,3,2,5]
 **Output:** 2
 **Explanation:** The maximum width exists in the second level with length 2 (3,2).
-```cpp
-class Solution {
-public:
-    int widthOfBinaryTree(TreeNode* root) {
-        if (!root) return 0;
-        std::queue<std::pair<TreeNode*, unsigned long long>> toVisit; // node, column index
-        toVisit.push({root, 0});
-        int max_ans = 0;
-        while (!toVisit.empty()) {
-            int size = toVisit.size();
-            unsigned long long min_index = toVisit.front().second;
-            unsigned long long first_index, last_index;
-            for (int i = 0; i < size; ++i) {
-                auto cur = toVisit.front();
-                toVisit.pop();
-                unsigned long long cur_index = cur.second - min_index; // Normalize the indices to avoid overflow
-                if (i == 0) first_index = cur_index;
-                if (i == size - 1) last_index = cur_index;
-                if (cur.first->left != nullptr) {
-                    toVisit.push({cur.first->left, 2 * cur_index + 1});
-                }
-                if (cur.first->right != nullptr) {
-                    toVisit.push({cur.first->right, 2 * cur_index + 2});
-                }
-            }
-            int width = last_index - first_index + 1;
-            max_ans = std::max(max_ans, width);
-        }
-        return max_ans;
-    }
-};
+```python
+class Solution:
+    def widthOfBinaryTree(self, root: TreeNode) -> int:
+        ans = 0
+        if not root:
+            return ans
+        
+        queue = collections.deque([(root, 0)])
+        while queue:
+            l, r = queue[0][1], queue[-1][1]
+            ans = max(ans, r-l + 1)
+            
+            for _ in range(len(queue)):
+                node, idx = queue.popleft()
+                if node.left:
+                    queue.append((node.left, idx*2+1))
+                if node.right:
+                    queue.append((node.right, idx*2+2))
+                
+        return ans
 ```
 
 ### Check for Children Sum Property in a Binary Tree
