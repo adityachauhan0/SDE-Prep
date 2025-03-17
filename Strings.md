@@ -100,6 +100,86 @@ string reverseWords(string s) {
 
 ## Largest Odd Number in a String
 https://leetcode.com/problems/largest-odd-number-in-string/
+
+You are given a string `num` representing a large integer. Return the largest-valued odd integer (as a string) that is a **non-empty** substring of `num`, or an empty string if no odd integer exists.
+
+A substring is a contiguous sequence of characters within a string.
+
+---
+### Example 1
+
+**Input:**
+```
+num = "52"
+```
+
+**Output:**
+```
+"5"
+```
+
+**Explanation:**
+The only non-empty substrings are `"5"`, `"2"`, and `"52"`. `"5"` is the only odd number.
+
+---
+
+### Example 2
+
+**Input:**
+```
+num = "4206"
+```
+
+**Output:**
+```
+""
+```
+
+**Explanation:**
+There are no odd numbers in `"4206"`.
+
+---
+
+### Example 3
+
+**Input:**
+```
+num = "35427"
+```
+
+**Output:**
+```
+"35427"
+```
+
+**Explanation:**
+`"35427"` is already an odd number.
+
+---
+
+### Constraints
+
+- `1 <= num.length <= 10^5`
+- `num` consists only of digits and does not contain any leading zeros.
+
+``` cpp
+class Solution {
+public:
+    string largestOddNumber(string num) {
+        if (num.back() % 2 == 1) return num;
+        int i = num.length() - 1;
+        while (i >= 0) {
+            int n = num[i];
+            if (n % 2 == 1) return num.substr(0, i + 1);
+            i--;
+        }
+        return "";
+    }
+};
+```
+
+---
+## Longest Common Prefix
 Write a function to find the longest common prefix string amongst an array of strings.
 
 If there is no common prefix, return an empty string `""`.
@@ -638,6 +718,52 @@ in `s`.
 **Input:** s = "cbbd"
 **Output:** "bb"
 
+The non DP version uses the expand-around-center approach:
+
+```cpp
+class Solution {
+public:
+    std::string longestPalindrome(std::string s) {
+        if (s.empty()) return "";
+        int start = 0, end = 0;
+        for (int i = 0; i < s.size(); ++i) {
+            // Odd length palindromes
+            int left = i, right = i;
+            while (left >= 0 && right < s.size() && s[left] == s[right]) {
+                if (right - left > end - start) {
+                    start = left;
+                    end = right;
+                }
+                --left;
+                ++right;
+            }
+            // Even length palindromes
+            left = i, right = i + 1;
+            while (left >= 0 && right < s.size() && s[left] == s[right]) {
+                if (right - left > end - start) {
+                    start = left;
+                    end = right;
+                }
+                --left;
+                ++right;
+            }
+        }
+        return s.substr(start, end - start + 1);
+    }
+};
+```
+
+### Explanation
+
+- **Expand Around Center:**  
+  For each index `i`, we treat it as the center of a potential palindrome and expand outwards for both odd and even length palindromes.
+  
+- **Update Longest Palindrome:**  
+  If a longer palindrome is found during expansion, we update `start` and `end` accordingly.
+
+- **Result:**  
+  Finally, return the substring defined by the updated indices.
+---
 Manacher's Algorithm
 ```cpp
 class Solution {
@@ -736,55 +862,63 @@ public:
 };
 ```
 
-## Reverse every word in a string
-https://leetcode.com/problems/reverse-words-in-a-string/
-Given an input string `s`, reverse the order of the **words**.
+but this is bruteforce, we can use prefix sums and DP:
+Below is a dynamic programming version that precomputes prefix frequency counts so that you can compute the frequency of any substring in O(26) time:
 
-A **word** is defined as a sequence of non-space characters. The **words** in `s` will be separated by at least one space.
-
-Return _a string of the words in reverse order concatenated by a single space._
-
-**Note** that `s` may contain leading or trailing spaces or multiple spaces between two words. The returned string should only have a single space separating the words. Do not include any extra spaces.
-
-**Example 1:**
-
-**Input:** s = "the sky is blue"
-**Output:** "blue is sky the"
-
-**Example 2:**
-
-**Input:** s = "  hello world  "
-**Output:** "world hello"
-**Explanation:** Your reversed string should not contain leading or trailing spaces.
-
-**Example 3:**
-
-**Input:** s = "a good   example"
-**Output:** "example good a"
-**Explanation:** You need to reduce multiple spaces between two words to a single space in the reversed string.
 ```cpp
 class Solution {
 public:
-    string reverseWords(string s) {
-        reverse(s.begin(),s.end());
-        int n=s.size();
-        int left=0;
-        int right=0;
-        int i=0;
-        while(i<n){
-            while(i<n && s[i]==' ')i++;
-            if(i==n)break; // to stop index going out of bounds
-            while(i<n && s[i]!=' '){
-                s[right++]=s[i++];
-            }
-            reverse(s.begin()+left,s.begin()+right);
-            s[right++]=' ';
-            left=right;
-            i++;
+    int beautySum(string s) {
+        int n = s.size();
+        int result = 0;
+        
+        // Build a prefix frequency array:
+        // prefix[i+1] stores the frequency counts for substring s[0...i]
+        vector<vector<int>> prefix(n + 1, vector<int>(26, 0));
+        for (int i = 0; i < n; ++i) {
+            prefix[i + 1] = prefix[i];              // Copy previous counts
+            prefix[i + 1][s[i] - 'a']++;              // Update count for current character
         }
-        s.resize(right-1);
-        return s;
+        
+        // Iterate over all substrings s[i...j]
+        for (int i = 0; i < n; ++i) {
+            for (int j = i; j < n; ++j) {
+                int maxFreq = 0, minFreq = INT_MAX;
+                // Compute frequency for each character using the prefix array:
+                // The frequency of character c in s[i...j] is:
+                //   prefix[j+1][c] - prefix[i][c]
+                for (int c = 0; c < 26; ++c) {
+                    int count = prefix[j + 1][c] - prefix[i][c];
+                    if (count > 0) {
+                        maxFreq = max(maxFreq, count);
+                        minFreq = min(minFreq, count);
+                    }
+                }
+                result += (maxFreq - minFreq);
+            }
+        }
+        return result;
     }
 };
 ```
+
+### Explanation
+
+1. **Prefix Frequency Array Construction:**  
+   - A 2D vector `prefix` is built such that `prefix[i+1]` holds the frequency counts for all characters in the substring `s[0...i]`.
+   - This is built iteratively by copying the previous frequency counts and updating the count for the current character.
+   
+2. **Computing Frequencies for a Substring:**  
+   - For any substring `s[i...j]`, the frequency of a character `c` is obtained by subtracting:
+     ```
+     count = prefix[j+1][c] - prefix[i][c]
+     ```
+   - This avoids recomputing the frequency counts from scratch for every substring.
+   
+3. **Calculating the Beauty:**  
+   - For each substring, the maximum (`maxFreq`) and minimum (`minFreq`) frequencies (ignoring zeros) are computed.
+   - The beauty of the substring is `maxFreq - minFreq`, which is added to the final result.
+
+This DP approach leverages precomputed information to optimize repeated frequency calculations, resulting in a cleaner and more efficient solution compared to recomputing frequencies for each substring directly.
+---
 

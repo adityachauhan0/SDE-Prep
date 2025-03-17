@@ -281,6 +281,65 @@ public:
 };
 ```
 
+Here is a 2 pointer version of this problem
+
+```cpp
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int n = height.size();
+        int left = 0, right = n - 1;
+        int leftMax = 0, rightMax = 0;
+        int water = 0;
+        
+        while (left < right) {
+            // Decide which pointer to move based on the smaller height
+            if (height[left] < height[right]) {
+                // Update leftMax or add trapped water at left pointer
+                if (height[left] >= leftMax)
+                    leftMax = height[left];
+                else
+                    water += leftMax - height[left];
+                left++;
+            } else {
+                // Update rightMax or add trapped water at right pointer
+                if (height[right] >= rightMax)
+                    rightMax = height[right];
+                else
+                    water += rightMax - height[right];
+                right--;
+            }
+        }
+        
+        return water;
+    }
+};
+```
+
+### Explanation
+
+- **Two Pointers Setup:**  
+  We use two pointers, `left` starting from the beginning and `right` starting from the end, to scan the elevation map.
+
+- **Maintaining Maximum Heights:**  
+  - `leftMax` stores the maximum height encountered from the left side.
+  - `rightMax` stores the maximum height encountered from the right side.
+
+- **Processing:**  
+  - At each step, we compare `height[left]` and `height[right]`.  
+  - If `height[left]` is smaller, it means the trapped water on the left side is limited by `leftMax`.  
+    - If the current height is below `leftMax`, water is trapped equal to `leftMax - height[left]`.
+    - Then, move the `left` pointer to the right.
+  - Otherwise, if `height[right]` is smaller or equal, process the right side similarly:
+    - If the current height is below `rightMax`, water is trapped equal to `rightMax - height[right]`.
+    - Then, move the `right` pointer to the left.
+
+- **Result:**  
+  The variable `water` accumulates the total trapped water, which is returned at the end.
+
+This approach runs in \(O(n)\) time and uses \(O(1)\) extra space, making it efficient and elegant.
+---
+
 ## Sum of Subarray Mins
 https://leetcode.com/problems/sum-of-subarray-minimums/
 Given an array of integers arr, find the sum of `min(b)`, where `b` ranges over every (contiguous) subarray of `arr`. Since the answer may be large, return the answer **modulo** `109 + 7`.
